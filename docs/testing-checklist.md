@@ -5,14 +5,13 @@ is destructive or requires unlocking anything yet.
 
 ## What you need
 
-- An Echo Show 5, **1st generation** (2019, model **H23K37**) — check the model number on the bottom of
-  the unit, or in Settings > Device Options on the device itself if it still runs stock Fire OS.
-- A way to get root/adb access to run one read-only script. If the device is still stock and
-  unrooted, see the
+- An Echo Show 5, **1st generation** (2019, model **H23K37**).
+- Root/adb access. If it's already unlocked with LineageOS on it, you're already past this — `adb root`
+  should just work. (If starting from scratch instead, the
   [XDA unlock/root/TWRP thread for this device](https://xdaforums.com/t/unlock-root-twrp-unbrick-amazon-echo-show-5-1st-gen-2019-checkers.4762900/)
-  first — that's the same community work TECHO5's own unlock is built on for the 2nd-gen model, just a
-  different branch ([`mt8163-checkers`](https://github.com/R0rt1z2/amonet/tree/mt8163-checkers) instead
-  of `mt8163-cronos`).
+  is the same community work TECHO5's own unlock is built on for the 2nd-gen model, just a different
+  branch — [`mt8163-checkers`](https://github.com/R0rt1z2/amonet/tree/mt8163-checkers) instead of
+  `mt8163-cronos`.)
 - A computer with `adb` installed (part of Android's platform-tools).
 
 ## What to run
@@ -45,7 +44,7 @@ way `dot` and `spot` each needed their own adaptations for their own hardware.
 Once the hardware picture is clear, the next steps (in order, each depending on the last actually
 working) are:
 
-1. Confirm the `mt8163-checkers` unlock and TWRP work as documented on XDA.
+1. ~~Confirm the `mt8163-checkers` unlock and TWRP work as documented on XDA.~~ Already done.
 2. Get a minimal Linux environment booting at all (even without working display/audio yet).
 3. Bring up the display, then audio in/out, then Wi-Fi/Bluetooth, one at a time.
 4. Wire up `echod` against whatever's confirmed working, adding a `checkers` build tag only where the
