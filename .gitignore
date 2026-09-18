@@ -1,0 +1,6 @@
+# Never commit a Show's backup (it holds its serial, addresses and factory keys) or raw results.
+checkers-backup-*/
+*.img
+checkers-results-*.txt
+checkers-dump.txt
+__pycache__/

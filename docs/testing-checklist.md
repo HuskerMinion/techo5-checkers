@@ -16,14 +16,22 @@ is destructive or requires unlocking anything yet.
 
 ## What to run
 
-1. Download [`tools/hwdump.sh`](../tools/hwdump.sh) from this repo.
-2. With the device connected over USB and adb root access:
-   ```
-   adb root
-   adb push hwdump.sh /data/local/tmp/
-   adb shell sh /data/local/tmp/hwdump.sh > checkers-dump.txt
-   ```
-3. Send back `checkers-dump.txt`.
+**On Windows, follow [windows-guide.md](windows-guide.md)**: every step, from installing Python to
+sending the results. It uses [`tools/checkers-kit.py`](../tools/checkers-kit.py), which also makes a
+full, checked backup of the Show first and takes the serial number and network addresses out of the
+results for you.
+
+On a Mac or Linux, the same kit: `python3 tools/checkers-kit.py check`, then `backup`, then `test`.
+
+Just the hardware dump, by hand:
+
+```
+adb root
+adb push tools/hwdump.sh /data/local/tmp/
+adb shell sh /data/local/tmp/hwdump.sh > checkers-dump.txt
+```
+
+(Remove the serial number and MAC addresses from it before sending it.)
 
 That's it for step one. The script is read-only — it doesn't modify anything, doesn't open any audio
 device, and doesn't touch the bootloader. It just reads out what the device's kernel and drivers report
@@ -34,21 +42,14 @@ the same way it was used to build
 
 ## What happens with it
 
-Much of the hardware is already known from the kernel source (see [hardware.md](hardware.md)): it's
-very close to the 2nd-gen Show 5, with four expected differences — the speaker, the mute switch
-driver, the kernel build and the camera. The dump confirms or corrects that, and settles the questions
-only a real unit can answer:
+A first dump, from Empty2k12's unit, already confirmed most of the hardware (see
+[hardware.md](hardware.md)), and their work got the speaker playing. The kit's tests go after what's
+still open, and a second unit's dump shows whether units differ (board revisions sometimes do):
 
-- **Speaker**: the audio mixer controls (does the RT5616 codec show up, and is there an
-  `Ext_Speaker_Amp_Switch`?) — the one part that needs real new work.
-- **Kernel**: the exact kernel version and commit (`uname -a`), which decides whether TECHO5's rebuilt
-  Bluetooth kernel can be matched to it.
-- **Mute switch**: whether `/sys/devices/platform/amazon-gating` is there, as expected.
-- **Camera**: which sensor the kernel reports.
-- **Partitions**: whether recovery is p11 on this model.
-
-Whatever matches the 2nd gen reuses TECHO5's existing code as it is; whatever differs is where new
-`checkers` code gets written.
+- **Mute**: does the button light the red indicator, and can software switch the microphones off but
+  never back on, the way TECHO5 relies on?
+- **Camera**: does the OV9734 give a picture in LineageOS, with the right colours?
+- **Your unit's hardware**: does it match the first dump?
 
 ## Wi-Fi: use WPA2
 
