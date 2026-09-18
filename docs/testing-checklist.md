@@ -34,10 +34,27 @@ the same way it was used to build
 
 ## What happens with it
 
-The dump gets compared field-by-field against cronos's (2nd-gen) hardware.md. Whatever matches can
-likely reuse TECHO5's existing code as-is. Whatever differs — a different touch controller, a different
-audio codec, a different Wi-Fi/BT chip — is where new, `checkers`-specific code gets written, the same
-way `dot` and `spot` each needed their own adaptations for their own hardware.
+Much of the hardware is already known from the kernel source (see [hardware.md](hardware.md)): it's
+very close to the 2nd-gen Show 5, with four expected differences — the speaker, the mute switch
+driver, the kernel build and the camera. The dump confirms or corrects that, and settles the questions
+only a real unit can answer:
+
+- **Speaker**: the audio mixer controls (does the RT5616 codec show up, and is there an
+  `Ext_Speaker_Amp_Switch`?) — the one part that needs real new work.
+- **Kernel**: the exact kernel version and commit (`uname -a`), which decides whether TECHO5's rebuilt
+  Bluetooth kernel can be matched to it.
+- **Mute switch**: whether `/sys/devices/platform/amazon-gating` is there, as expected.
+- **Camera**: which sensor the kernel reports.
+- **Partitions**: whether recovery is p11 on this model.
+
+Whatever matches the 2nd gen reuses TECHO5's existing code as it is; whatever differs is where new
+`checkers` code gets written.
+
+## Wi-Fi: use WPA2
+
+When the time comes to try a TECHO5 build on the unit: it **can't join WPA3 networks, or networks that
+require "protected management frames" (PMF)** — it scans and never connects. Use a WPA2-Personal
+network with PMF off or set to "optional" (a guest network works well for this).
 
 ## After that
 
@@ -45,10 +62,11 @@ Once the hardware picture is clear, the next steps (in order, each depending on 
 working) are:
 
 1. ~~Confirm the `mt8163-checkers` unlock and TWRP work as documented on XDA.~~ Already done.
-2. Get a minimal Linux environment booting at all (even without working display/audio yet).
-3. Bring up the display, then audio in/out, then Wi-Fi/Bluetooth, one at a time.
-4. Wire up `echod` against whatever's confirmed working, adding a `checkers` build tag only where the
-   hardware genuinely differs from cronos.
+2. Build the `checkers` kernel (its own config, with TECHO5's Bluetooth options) and boot image.
+3. Get the TECHO5 Linux image booting; the screen, touch, microphones and Wi-Fi are expected to work
+   unchanged since they match the 2nd gen.
+4. The speaker: switch the amplifier on safely, then tune the volume by ear.
+5. The mute switch and the camera, then everything else as a smoke test (wake word, alarms, updates).
 
 Each of those is its own round of "try it, report back what happened" — there's no way to skip ahead
 without a real device to test each step on.

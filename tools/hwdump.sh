@@ -1,5 +1,5 @@
 #!/system/bin/sh
-# TECHO5 hardware ground-truth dump for cronos. Read-only.
+# TECHO5 hardware ground-truth dump for checkers (1st-gen Show 5); works on cronos too. Read-only.
 # Run as root on the device:  adb root; adb push tools/hwdump.sh /data/local/tmp/; adb shell sh /data/local/tmp/hwdump.sh > dump.txt
 # It never opens an audio device, so a running satellite is not disturbed.
 # It deliberately avoids `dumpsys media.audio_flinger`, which crashes the vendor audio HAL on this device.
@@ -89,6 +89,11 @@ for b in /sys/class/backlight/*; do [ -d "$b" ] && echo "$b: brightness=$(cat $b
 sec "camera / shutter"
 ls /dev/video* 2>/dev/null
 getevent -pl 2>/dev/null | grep -iA3 -E 'shutter|camera'
+dmesg 2>/dev/null | grep -iE 'ov9734|ov02b10|imgsensor|sensor_id|search sensor' | tail -20
+
+sec "mute latch (checkers: amazon-gating; cronos: gpio-privacy)"
+ls -la /sys/devices/platform/amazon-gating /sys/devices/platform/gpio-privacy 2>&1
+cat /sys/devices/platform/amazon-gating/state 2>/dev/null
 
 sec "network"
 cat /sys/class/net/wlan0/address 2>/dev/null

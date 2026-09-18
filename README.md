@@ -30,21 +30,24 @@ branch TECHO5 itself is built on. There's also an existing
 [XDA unlock/root/TWRP thread](https://xdaforums.com/t/unlock-root-twrp-unbrick-amazon-echo-show-5-1st-gen-2019-checkers.4762900/)
 for it. So the bootloader unlock is very likely just a variant of what TECHO5 already does for cronos.
 
-**What's unknown:** the display panel, touch controller, audio codec, and Wi-Fi/BT chip may differ from
-the 2nd-gen Show 5 even though the SoC is the same — none of that can be confirmed without a real unit.
-See [docs/hardware.md](docs/hardware.md) for exactly what's still missing and
-[docs/testing-checklist.md](docs/testing-checklist.md) for how to help fill it in.
+**What's known now:** reading the kernel source shows `checkers` is very close to the 2nd-gen Show 5 —
+same panel, touch, microphones, Wi-Fi/Bluetooth chip and partitions — with four expected differences:
+the speaker (a Realtek codec plus external amplifier, the one real piece of work), the mute switch
+driver, the kernel build, and a smaller camera. Credit to Empty2k12, whose research in
+[TECHO5 pull request #2](https://github.com/HuskerMinion/techo5/pull/2) this comes from. It still
+needs confirming on a unit: see [docs/hardware.md](docs/hardware.md) for the details and open questions,
+and [docs/testing-checklist.md](docs/testing-checklist.md) for how to help.
 
 ## How this will work
 
 1. A tester with a spare/willing-to-experiment `checkers` unit runs [tools/hwdump.sh](tools/hwdump.sh)
    (read-only, doesn't touch audio, safe to run on a device already rooted some other way) and sends
    back the output.
-2. That fills in `docs/hardware.md` with real values instead of guesses, the same way
+2. That confirms or corrects `docs/hardware.md` with real values, the same way
    [TECHO5's own hardware.md](https://github.com/HuskerMinion/techo5/blob/main/docs/hardware.md) was
    built from a real cronos unit.
-3. From there, whether `checkers` needs its own build tag in `echod` (like `dot`/`spot` do) or can reuse
-   the existing default build depends entirely on how different its peripherals turn out to be.
+3. From there, the `checkers`-specific code covers only what genuinely differs (the speaker first);
+   everything that matches the 2nd gen reuses TECHO5's existing code.
 4. Each following step (unlock, boot to TWRP, kernel Bluetooth, rootfs, first boot) gets tested the same
    way: a change proposed here, tried on the real device, results reported back.
 
