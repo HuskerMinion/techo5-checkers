@@ -14,11 +14,11 @@
 
 ---
 
-## Status: not started, needs a tester with real hardware
+## Status: early — hardware confirmed on a unit, speaker working, not yet running TECHO5 end to end
 
-This repo is a starting point, not a working port. Nobody on this project currently owns a 1st-gen
-Show 5 (`checkers`, model H23K37, 2019) to test on, so nothing here has been run against real hardware
-yet. It exists so that someone who *does* have the device can help bring it up, the same way
+This repo is a starting point, not a working port. The maintainer doesn't own a 1st-gen Show 5
+(`checkers`, model H23K37, 2019); what's been checked on real hardware so far comes from contributors
+who do (see below). It exists so that people with the device can help bring it up, the same way
 [TECHO5 Dot](https://github.com/HuskerMinion/techo5-dot) and
 [TECHO5 Spot](https://github.com/HuskerMinion/techo5-spot) were built: one person with the hardware,
 one person who knows this codebase, working from real diagnostic output rather than guesses.
@@ -30,13 +30,14 @@ branch TECHO5 itself is built on. There's also an existing
 [XDA unlock/root/TWRP thread](https://xdaforums.com/t/unlock-root-twrp-unbrick-amazon-echo-show-5-1st-gen-2019-checkers.4762900/)
 for it. So the bootloader unlock is very likely just a variant of what TECHO5 already does for cronos.
 
-**What's known now:** reading the kernel source shows `checkers` is very close to the 2nd-gen Show 5 —
-same panel, touch, microphones, Wi-Fi/Bluetooth chip and partitions — with four expected differences:
-the speaker (a Realtek codec plus external amplifier, the one real piece of work), the mute switch
-driver, the kernel build, and a smaller camera. Credit to Empty2k12, whose research in
-[TECHO5 pull request #2](https://github.com/HuskerMinion/techo5/pull/2) this comes from. It still
-needs confirming on a unit: see [docs/hardware.md](docs/hardware.md) for the details and open questions,
-and [docs/testing-checklist.md](docs/testing-checklist.md) for how to help.
+**What's known now:** `checkers` is very close to the 2nd-gen Show 5 — same panel, touch, microphones,
+Wi-Fi/Bluetooth chip, kernel commit and partitions, now confirmed from a hardware dump of a real unit —
+with four differences: the speaker (a Realtek codec plus external amplifier), the mute switch driver,
+the kernel build, and a smaller camera. **The speaker, the one real piece of work, has been made to
+play on a unit.** Credit to Empty2k12, whose research, hardware dump and speaker work in
+[TECHO5 pull request #2](https://github.com/HuskerMinion/techo5/pull/2) this all comes from. See
+[docs/hardware.md](docs/hardware.md) for the details and what's still open, and
+[docs/testing-checklist.md](docs/testing-checklist.md) for how to help.
 
 ## How this will work
 
