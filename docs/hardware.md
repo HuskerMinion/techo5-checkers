@@ -6,7 +6,9 @@ source the LineageOS build for `checkers` is made from (`amazon-oss/android_kern
 branch `cronos/lineage-18.1`, which carries both the 1st and 2nd gen device trees), and, since
 2026-09-18, a `tools/hwdump.sh` dump and audio register readings from their own unit running
 LineageOS 18.1, plus their work getting the speaker to play. See `docs/porting-checkers.md` there for
-their full write-up.
+their full write-up. Since 2026-09-19, also a second unit: JonGilmore ran `tools/checkers-kit.py`
+(hardware dump, mute and camera tests) on LineageOS 18.1-20260905 with amonet v2.0.1
+([issue #1](https://github.com/HuskerMinion/techo5-checkers/issues/1)).
 
 **Confirmed** below means seen on a real `checkers`; anything else is from source only.
 
@@ -20,7 +22,8 @@ controller, microphone path, Wi-Fi/Bluetooth chip, kernel commit and partition l
 on a unit. **Four things differ**:
 
 1. **The speaker** — a different codec and amplifier. **Now solved on a unit** (below).
-2. **The mute switch** — a different driver, same behaviour.
+2. **The mute switch** — a different driver, and the button only signals: software has to set the
+   mute when it is pressed (below).
 3. **The kernel build** — its own config and device trees.
 4. **The camera** — a smaller sensor.
 
@@ -30,7 +33,7 @@ on a unit. **Four things differ**:
 |---|---|---|
 | SoC | MediaTek MT8163, 4 cores to 1.3 GHz, 32-bit userspace | same (confirmed) |
 | Memory / storage | 1 GB RAM, 8 GB eMMC | same (confirmed) |
-| Kernel | 4.9.337 arm64, `checkers_defconfig`; LineageOS's kernel is `4.9.337-g8d928c5176cc`, the same commit as cronos, so the vendor modules load | same commit (confirmed) |
+| Kernel | 4.9.337 arm64, `checkers_defconfig`; LineageOS's kernel is `4.9.337-g8d928c5176cc`, the same commit as cronos, so the vendor modules load. Older LineageOS builds for `checkers` run 4.9.117: TECHO5 needs the 2026-09-05 build or later | same commit (confirmed on two units) |
 | LineageOS | 18.1, `lineage-18.1-20260904-UNOFFICIAL-checkers` (R0rt1z2) | same build date |
 | Unlock | amonet `mt8163-checkers`, same button combo and fastbrick flow | same method, own branch |
 | Display | ST7701S, 960×480 landscape at 59.6 Hz (`lcm=1-st7701s_wsvga_dsi_vdo_checkers_st_inx`) | same (confirmed) |
@@ -41,12 +44,12 @@ on a unit. **Four things differ**:
 | **Speaker** | **Realtek RT5616 codec at I²C 2-0x1b, plus an external amplifier on `amp_gpio` (pio 35), active low** | **different** (cronos: MAX98396) |
 | Wi-Fi / BT | MediaTek MT7668 SDIO, `mt76x8_wlan.ko` / `mt76x8_bt.ko` loaded, 5 GHz on | same (confirmed) |
 | Buttons | `gpio-keys`: volume up / down, plus `SW_CAMERA_LENS_COVER`; the mute button is key 116 on an input device named `gating` | same codes (confirmed) |
-| **Mute** | **`amazon-gating` driver** (`/sys/devices/platform/amazon-gating/`); no `SW_MUTE_DEVICE` switch | **different driver** (confirmed), same one-way latch (from source) |
+| **Mute** | **`amazon-gating` driver** (`/sys/devices/platform/amazon-gating/`); no `SW_MUTE_DEVICE` switch. The button does not set the latch on its own: it only sends key 116; writing `1` to `enable` sets it, and a press clears it | **different driver and button behaviour** (confirmed), one-way latch (confirmed) |
 | Light sensor | `alsps` at I²C 0-0x44 via MediaTek hwmsensor, input `m_alsps_input` | same interface, different chip |
-| **Camera** | **OmniVision OV9734, 1 MP** (`camera_main` at I²C 0-0x2e, `camera_sub` at 0-0x21), power gate on GPIO `cam_pwr_gate_pin` | **different** (cronos: 2 MP OV02B10) |
+| **Camera** | **OmniVision OV9734, 1 MP** (`camera_main` at I²C 0-0x2e, `camera_sub` at 0-0x21), power gate on GPIO `cam_pwr_gate_pin`; works in LineageOS's camera app | **different** (cronos: 2 MP OV02B10); works (confirmed) |
 | Partitions | MISC p8, boot p9, recovery p10 (16 MB), swdl p11, system p12, cache p13, userdata p16 | same (confirmed) |
 | Recovery | p10; writing `boot-recovery` into MISC (p8) and rebooting lands in TWRP | same as cronos (confirmed — an earlier guess of p11 was wrong) |
-| Red mute LED | not in `/sys/class/leds` (only `lcd-backlight` is) | how it's driven is still open |
+| Red mute LED | not in `/sys/class/leds` (only `lcd-backlight` is); lit by the latch itself: on when software sets it, off when the button clears it | driven by the latch (confirmed) |
 
 ## The speaker: how it was made to play
 
@@ -77,10 +80,22 @@ by ear.
 
 ### Mute switch
 
-Same one-way hardware latch as cronos (software can mute, only the button can unmute), but behind
-Amazon's `amazon-gating` driver instead of `gpio-privacy`, with the same `state` / `enable` files.
-There's no mute switch input device; the state comes from the `state` file, and the button comes
-through as an ordinary key, so button handling needs nothing new.
+A one-way hardware latch as on cronos, behind Amazon's `amazon-gating` driver instead of
+`gpio-privacy`, with the same `state` / `enable` files, but **the button does not set it**. Tested on
+a unit (JonGilmore, 2026-09-19):
+
+- Pressing the button with the microphones on sends one key press (`KEY_POWER`, 116, down and up,
+  on the `gating` input device) and nothing else: `state` stays `0` and the red light stays off.
+- Writing `1` to `enable` sets the latch: `state` reads `1` and the red light comes on.
+- Writing `0` to `enable` then changes nothing: software cannot unmute.
+- Pressing the button while muted clears the latch (`state` `0`, red light off), and sends the same
+  key press.
+
+So on `checkers` Amazon's software must have done the muting, on hearing the key. TECHO5 has to do
+the same to behave like the original: on a press with the microphones on, write `1` to `enable`; on a
+press while muted, do nothing, since the button has already cleared the latch. Which case a press is
+has to be decided from `state` as it was *before* the press, because by the time the key is read a
+press that unmutes has already cleared it.
 
 ### Kernel build
 
@@ -91,10 +106,11 @@ way (all five trees carry `amzn,mic-downmix`).
 ### Camera
 
 A 1 MP OV9734 instead of cronos's 2 MP sensor. The camera pipeline should carry over with only the
-frame geometry changed (1280×720 is the sensor's nominal mode, not yet read off a unit). One thing to
-watch: in the dump's boot log the camera driver reports "No imgsensor alive" on its first probes
-before settling, which may just be the power gate or the lens cover. A first picture with TECHO5 will
-tell whether the geometry and colour order are right.
+frame geometry changed (1280×720 is the sensor's nominal mode, not yet read off a unit). It works in
+LineageOS's camera app on the 2026-09-05 build (JonGilmore); the "No imgsensor alive" lines in the
+kernel log appear on that working unit too, so they are not a fault by themselves. The lens
+cover reads on `gpio-499`: high with the shutter open, low with it closed. A first picture with
+TECHO5 will tell whether the geometry and colour order are right.
 
 ## Known catch: Wi-Fi security
 
@@ -109,8 +125,9 @@ Use WPA2-Personal with PMF off or "optional". This applies to every TECHO5 devic
   **Off**: it's active low.
 - ~~Is the LineageOS `checkers` kernel the same commit as its vendor modules?~~ Yes.
 - ~~Is recovery p11?~~ No, p10, same as cronos.
-- Does the mute latch cut the microphones and light the red indicator the same way, one-way? (The red
-  LED isn't a normal LED device, so how it's driven needs a look.)
+- ~~Does the mute latch light the red indicator, one-way?~~ Yes: software sets it, only the button
+  clears it, and the red light follows it. But the button does not set it (see Mute switch).
+- Does the latch cut the microphones in hardware, as on cronos? (A recording while muted will tell.)
 - Does the camera come up at 1280×720 with the same colour order?
 - Does the boot slot take 64-bit kernels only, as on cronos?
 - The speaker's volume curve, by ear.
