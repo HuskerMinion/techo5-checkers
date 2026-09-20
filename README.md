@@ -4,53 +4,69 @@
 
 <h1 align="center">TECHO5 Checkers</h1>
 
-<h3 align="center">An experimental TECHO5 port for the Echo Show 5, 1st generation (2019, codename `checkers`)</h3>
+<h3 align="center">The hardware notes behind TECHO5 on the Echo Show 5, 1st generation (2019, codename <code>checkers</code>)</h3>
 
 <p align="center">
-  <a href="https://github.com/HuskerMinion/techo5">TECHO5 for the Echo Show 5 (2nd gen)</a> ·
+  <a href="https://github.com/HuskerMinion/techo5">TECHO5 for the Echo Show 5</a> ·
   <a href="https://github.com/HuskerMinion/techo5-dot">TECHO5 for the Echo Dot</a> ·
   <a href="https://github.com/HuskerMinion/techo5-spot">TECHO5 for the Echo Spot</a>
 </p>
 
 ---
 
-## Status: early — hardware confirmed on a unit, speaker working, not yet running TECHO5 end to end
+## The port is done. Install it from [TECHO5](https://github.com/HuskerMinion/techo5).
 
-This repo is a starting point, not a working port. The maintainer doesn't own a 1st-gen Show 5
-(`checkers`, model H23K37, 2019); what's been checked on real hardware so far comes from contributors
-who do (see below). It exists so that people with the device can help bring it up, the same way
-[TECHO5 Dot](https://github.com/HuskerMinion/techo5-dot) and
-[TECHO5 Spot](https://github.com/HuskerMinion/techo5-spot) were built: one person with the hardware,
-one person who knows this codebase, working from real diagnostic output rather than guesses.
+The 1st gen Show 5 runs TECHO5: Alpine Linux in place of Fire OS, one daemon, a Home Assistant voice
+satellite with its own screen. There is nothing to install from this repository. One build serves both
+generations of the Show 5 and works out at run time which one it is on, and the installer takes that
+unit's boot image straight from the release:
 
-**What's promising:** `checkers` uses the same MediaTek MT8163 SoC as the 2nd-gen Show 5 TECHO5 already
-targets, and the same unlock-tool author ([R0rt1z2/amonet](https://github.com/R0rt1z2/amonet)) already
-maintains a working `mt8163-checkers` branch for this exact device, alongside the `mt8163-cronos`
-branch TECHO5 itself is built on. There's also an existing
-[XDA unlock/root/TWRP thread](https://xdaforums.com/t/unlock-root-twrp-unbrick-amazon-echo-show-5-1st-gen-2019-checkers.4762900/)
-for it. So the bootloader unlock is very likely just a variant of what TECHO5 already does for cronos.
+```
+git clone https://github.com/HuskerMinion/techo5
+cd techo5
+python3 tools/install-show.py --serial <adb serial> --name "Kitchen"
+```
 
-**What's known now:** `checkers` is very close to the 2nd-gen Show 5 — same panel, touch, microphones,
-Wi-Fi/Bluetooth chip, kernel commit and partitions, now confirmed from a hardware dump of a real unit —
-with four differences: the speaker (a Realtek codec plus external amplifier), the mute switch driver,
-the kernel build, and a smaller camera. **The speaker, the one real piece of work, has been made to
-play on a unit.** Credit to Empty2k12, whose research, hardware dump and speaker work in
-[TECHO5 pull request #2](https://github.com/HuskerMinion/techo5/pull/2) this all comes from. See
-[docs/hardware.md](docs/hardware.md) for the details and what's still open, and
-[docs/testing-checklist.md](docs/testing-checklist.md) for how to help.
+Start at [Getting started](https://github.com/HuskerMinion/techo5/blob/main/docs/getting-started.md),
+which covers the unlock, LineageOS and the install for both generations.
 
-## How this will work
+**What was tested on a unit:** screen, touch, speaker, the microphones, wake word, camera, the mute
+button, and voice with spoken replies — over 2026-09-19 and 20. Everything else is the same code that
+runs on the 2nd gen, but it has not been put through its paces on this generation, and one unit for two
+days is not much mileage. Treat it accordingly: keep your backups.
 
-1. A tester with a spare/willing-to-experiment `checkers` unit runs [tools/hwdump.sh](tools/hwdump.sh)
-   (read-only, doesn't touch audio, safe to run on a device already rooted some other way) and sends
-   back the output.
-2. That confirms or corrects `docs/hardware.md` with real values, the same way
-   [TECHO5's own hardware.md](https://github.com/HuskerMinion/techo5/blob/main/docs/hardware.md) was
-   built from a real cronos unit.
-3. From there, the `checkers`-specific code covers only what genuinely differs (the speaker first);
-   everything that matches the 2nd gen reuses TECHO5's existing code.
-4. Each following step (unlock, boot to TWRP, kernel Bluetooth, rootfs, first boot) gets tested the same
-   way: a change proposed here, tried on the real device, results reported back.
+## What this repository is for
 
-This stays private until the basics (unlock, boot, a first working image) are confirmed on real
-hardware — no point publishing something unverified.
+The notes. Four things on `checkers` are not what they are on the 2nd gen, and each one cost real
+work to find:
+
+- **The speaker** is a Realtek RT5616 codec with an external amplifier, not the 2nd gen's arrangement.
+- **The mute switch** uses a different driver (`amazon-gating`), and its button only signals: the
+  software has to do the muting. Worse, the latch cuts power to the microphone path, and releasing it
+  does not always bring the path back — which needed a kernel patch, now in TECHO5's own build.
+- **The camera** is an OV9734 at 1280×720 with the Bayer order the other way round from the 2nd gen's
+  OV02B10.
+- **The kernel** is built for this device, from the same Amazon GPL source.
+
+[docs/hardware.md](docs/hardware.md) has all of it, with what was confirmed on real hardware and what
+is still read from source only. [docs/testing-checklist.md](docs/testing-checklist.md) is how a unit
+gets checked; [docs/windows-guide.md](docs/windows-guide.md) is the same ground from Windows.
+[tools/hwdump.sh](tools/hwdump.sh) and [tools/checkers-kit.py](tools/checkers-kit.py) are the
+read-only diagnostic scripts the notes were built from — useful on any unit that behaves oddly.
+
+## Credits
+
+[@Empty2k12](https://github.com/Empty2k12) did the first hardware dump, read the kernel source and got
+the speaker playing, in [TECHO5 pull request #2](https://github.com/HuskerMinion/techo5/pull/2).
+[@JonGilmore](https://github.com/JonGilmore) tested every build on a real unit over two days
+([issue #1](https://github.com/HuskerMinion/techo5-checkers/issues/1)); the microphones, the mute
+latch, the camera and the spoken replies were all found or confirmed from what he reported. The
+bootloader unlock is [R0rt1z2](https://github.com/R0rt1z2)'s amonet, branch `mt8163-checkers`, with the
+[XDA thread](https://xdaforums.com/t/unlock-root-twrp-unbrick-amazon-echo-show-5-1st-gen-2019-checkers.4762900/)
+for it, and LineageOS 18.1 for `checkers` is theirs too.
+
+## License
+
+MIT, as TECHO5 is. See [LICENSE](LICENSE) and [NOTICE](NOTICE).
+
+TECHO5 isn't affiliated with Amazon. Echo and Alexa are trademarks of Amazon.com, Inc.

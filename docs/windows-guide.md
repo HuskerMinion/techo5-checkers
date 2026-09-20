@@ -8,7 +8,7 @@ You'll do four things:
 1. Install Python and Android's adb tool (once).
 2. Download this kit.
 3. Make a full backup of the Show, kept on your PC.
-4. Run the tests and attach the results to [issue #1](https://github.com/HuskerMinion/techo5-checkers/issues/1).
+4. Run the tests, and attach the results to a new issue if something is not behaving.
 
 Everything you type is shown in a box like this, and goes into **PowerShell** (step 3 shows how to
 open it in the right folder):
@@ -49,8 +49,7 @@ if it can't find it. If you need it:
 
 ## Step 3: Download the kit and open PowerShell in it
 
-1. Go to <https://github.com/HuskerMinion/techo5-checkers> (sign in to GitHub first, since the
-   repository is private).
+1. Go to <https://github.com/HuskerMinion/techo5-checkers>.
 2. Click the green **Code** button, then **Download ZIP**.
 3. Right-click the ZIP in your Downloads folder, choose **Extract All...**, type `C:\` and click
    **Extract**. You'll get a folder like `C:\techo5-checkers-main`.
