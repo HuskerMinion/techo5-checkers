@@ -22,8 +22,9 @@ controller, microphone path, Wi-Fi/Bluetooth chip, kernel commit and partition l
 on a unit. **Four things differ**:
 
 1. **The speaker** — a different codec and amplifier. **Now solved on a unit** (below).
-2. **The mute switch** — a different driver, and the button only signals: software has to set the
-   mute when it is pressed (below).
+2. **The mute switch** — a different driver, the button only signals so software has to set the mute
+   when it is pressed, and the latch cuts power to the microphone path, which needs a kernel patch to
+   come back (below).
 3. **The kernel build** — its own config and device trees.
 4. **The camera** — a smaller sensor.
 
@@ -97,6 +98,29 @@ press while muted, do nothing, since the button has already cleared the latch. W
 has to be decided from `state` as it was *before* the press, because by the time the key is read a
 press that unmutes has already cleared it.
 
+#### The latch cuts power to the microphones, and the way back needs a kernel patch
+
+Engaging the latch takes the microphone path down with it, and releasing it does not always bring the
+path back: capture then reads digital silence (`peak=0`, the echo canceller at `-120 dBFS`) and the
+FPGA answers `verify_fpga_frm_ver: Unrecognized FPGA rev: 0`. Reopening the capture device does not
+help, and neither does restarting the daemon (JonGilmore, 2026-09-20).
+
+The kernel has both halves. `mt_soc_machine.c` registers a gating notifier: `GATED` calls
+`AudDrv_GPIO_MIC_Enable_Select(false)` and `UNGATED` calls it with `true`. The disable is in the log of
+a unit that has been muted; the enable is not there after the button releases the latch. In
+`drivers/misc/gating.c` the button handler reads the state pin as it handles the release and gives up
+when it still reads `GATED`, which is one way the enable is never sent.
+
+Userspace cannot do it instead: `set_gating_state()` refuses `UNGATED` ("Don't allow userspace to turn
+off Privacy Mode"), and the microphone pin is a pinctrl state with no mixer control on it.
+
+TECHO5 patches its own build of the kernel
+(`techo5/tools/linux/patches/checkers-0001-mic-enable-on-capture.patch`): `gating.c` gains
+`gating_hw_state()`, the latch as the state pin reports it, and the machine driver puts the microphone
+pin back when a **capture stream opens** and the latch reads `UNGATED`. The hardware state decides, so a
+unit that is still muted stays muted. Confirmed on a unit: mute ignores the wake word, unmute hears it
+again (2026-09-20).
+
 ### Kernel build
 
 Its own `checkers_defconfig`, with five appended device trees instead of cronos's eleven, and only the
@@ -127,7 +151,11 @@ Use WPA2-Personal with PMF off or "optional". This applies to every TECHO5 devic
 - ~~Is recovery p11?~~ No, p10, same as cronos.
 - ~~Does the mute latch light the red indicator, one-way?~~ Yes: software sets it, only the button
   clears it, and the red light follows it. But the button does not set it (see Mute switch).
-- Does the latch cut the microphones in hardware, as on cronos? (A recording while muted will tell.)
-- Does the camera come up at 1280×720 with the same colour order?
+- ~~Does the latch cut the microphones in hardware?~~ Yes, and it takes their power with it: capture
+  reads zeros until the kernel patch above puts the pin back.
+- ~~Does the camera come up at 1280×720 with the same colour order?~~ 1280×720 yes; the order is the
+  other way round (its Bayer cells start with blue, cronos starts with red), so TECHO5 swaps red and
+  blue on this board. A unit reports the picture upright, the colors right and the exposure sensible
+  (JonGilmore, 2026-09-19).
 - Does the boot slot take 64-bit kernels only, as on cronos?
 - The speaker's volume curve, by ear.
