@@ -341,12 +341,12 @@ def cmd_test(args):
     adb.shell("am start -a android.media.action.STILL_IMAGE_CAMERA")
     say("      A camera app should open on the Show (it may ask for permissions; allow them).")
     picture = ask("      Do you see a live picture from the camera?")
-    colours = ask("      Do the colours look right (faces not blue, blue things not orange)?") if picture else False
+    colors = ask("      Do the colors look right (faces not blue, blue things not orange)?") if picture else False
     time.sleep(1)
     cam_log = adb.shell("dmesg 2>/dev/null | grep -iE 'ov9734|imgsensor|sensor_id|kd_sensorlist|seninf' | tail -40")
     adb.shell("input keyevent KEYCODE_HOME")
     note("camera", "live picture: %s\ncolours right: %s\nkernel log while the camera opened:\n%s"
-         % ("yes" if picture else "no", "yes" if colours else ("n/a" if not picture else "no"), cam_log))
+         % ("yes" if picture else "no", "yes" if colors else ("n/a" if not picture else "no"), cam_log))
 
     text = redact("\n".join(report) + "\n", info["serials"])
     name = "checkers-results-" + datetime.datetime.now().strftime("%Y%m%d-%H%M") + ".txt"

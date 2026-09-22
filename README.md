@@ -52,7 +52,10 @@ work to find:
 is still read from source only. [docs/testing-checklist.md](docs/testing-checklist.md) is how a unit
 gets checked; [docs/windows-guide.md](docs/windows-guide.md) is the same ground from Windows.
 [tools/hwdump.sh](tools/hwdump.sh) and [tools/checkers-kit.py](tools/checkers-kit.py) are the
-read-only diagnostic scripts the notes were built from — useful on any unit that behaves oddly.
+diagnostic scripts the notes were built from — useful on any unit that behaves oddly. Neither writes
+to the Show's storage; the one change `checkers-kit.py test` makes is to switch the microphones off
+with the mute latch, as the mute button does, and then ask you to press the button to switch them
+back on. Stop it partway through and the unit is left muted until you press it.
 
 ## Credits
 

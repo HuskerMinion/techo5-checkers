@@ -5,9 +5,8 @@ TECHO5, https://github.com/HuskerMinion/techo5 (MIT)
 
 amonet, https://github.com/R0rt1z2/amonet (mt8163-checkers branch)
   The bootROM + LK bootloader exploit this device's unlock is built on — the same author's
-  mt8163-cronos branch is what TECHO5 itself (the 2nd-gen Show 5) is built on, so the toolchain and
-  approach are already proven for this family of device, just not yet for this specific model.
+  mt8163-cronos branch is what TECHO5 itself (the 2nd-gen Show 5) is built on.
 
 Empty2k12, https://github.com/HuskerMinion/techo5/pull/2
   The hardware research in docs/hardware.md — how checkers differs from the 2nd-gen Show 5, read
-  from the kernel source — comes from their checkers write-up (docs/porting-checkers.md there).
+  from the kernel source — comes from their checkers write-up in that pull request.

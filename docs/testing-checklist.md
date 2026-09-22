@@ -1,7 +1,10 @@
-# What a tester needs to do (step 1)
+# What a tester needs to do
 
-This is the very first step, nothing more — establishing ground truth on real hardware. Nothing here
-is destructive or requires unlocking anything yet.
+The port is done and TECHO5 installs on this generation from the
+[main repository](https://github.com/HuskerMinion/techo5). This is the check that came before it, and
+it is still what to run on a unit that behaves oddly or on one you want ground truth from: the
+hardware dump, the backup, and a short set of questions. Nothing here is destructive or requires
+unlocking anything.
 
 ## What you need
 
@@ -48,7 +51,7 @@ still open, and a second unit's dump shows whether units differ (board revisions
 
 - **Mute**: does the button light the red indicator, and can software switch the microphones off but
   never back on, the way TECHO5 relies on?
-- **Camera**: does the OV9734 give a picture in LineageOS, with the right colours?
+- **Camera**: does the OV9734 give a picture in LineageOS, with the right colors?
 - **Your unit's hardware**: does it match the first dump?
 
 ## Wi-Fi: use WPA2

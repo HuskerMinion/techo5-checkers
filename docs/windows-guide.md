@@ -120,7 +120,7 @@ Enter, or just press Enter when it asks you to do something first.
    red light came on, then asks you to press the mute button to switch them back on. (That's the
    point of the test: only the button should be able to undo it.)
 4. **The camera**: slide the camera shutter open first. A camera app opens on the Show (allow it if
-   it asks); say whether you see a picture and whether the colours look right.
+   it asks); say whether you see a picture and whether the colors look right.
 
 At the end it tells you where it saved the results, a file like `checkers-results-20260919-1045.txt`
 in the kit's folder. **The serial number, network addresses and other identifiers are already taken

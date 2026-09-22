@@ -45,7 +45,7 @@ on a unit. **Four things differ**:
 | **Speaker** | **Realtek RT5616 codec at I²C 2-0x1b, plus an external amplifier on `amp_gpio` (pio 35), active low** | **different** (cronos: MAX98396) |
 | Wi-Fi / BT | MediaTek MT7668 SDIO, `mt76x8_wlan.ko` / `mt76x8_bt.ko` loaded, 5 GHz on | same (confirmed) |
 | Buttons | `gpio-keys`: volume up / down, plus `SW_CAMERA_LENS_COVER`; the mute button is key 116 on an input device named `gating` | same codes (confirmed) |
-| **Mute** | **`amazon-gating` driver** (`/sys/devices/platform/amazon-gating/`); no `SW_MUTE_DEVICE` switch. The button does not set the latch on its own: it only sends key 116; writing `1` to `enable` sets it, and a press clears it | **different driver and button behaviour** (confirmed), one-way latch (confirmed) |
+| **Mute** | **`amazon-gating` driver** (`/sys/devices/platform/amazon-gating/`); no `SW_MUTE_DEVICE` switch. The button does not set the latch on its own: it only sends key 116; writing `1` to `enable` sets it, and a press clears it | **different driver and button behavior** (confirmed), one-way latch (confirmed) |
 | Light sensor | `alsps` at I²C 0-0x44 via MediaTek hwmsensor, input `m_alsps_input` | same interface, different chip |
 | **Camera** | **OmniVision OV9734, 1 MP** (`camera_main` at I²C 0-0x2e, `camera_sub` at 0-0x21), power gate on GPIO `cam_pwr_gate_pin`; works in LineageOS's camera app | **different** (cronos: 2 MP OV02B10); works (confirmed) |
 | Partitions | MISC p8, boot p9, recovery p10 (16 MB), swdl p11, system p12, cache p13, userdata p16 | same (confirmed) |
@@ -134,7 +134,7 @@ frame geometry changed (1280×720 is the sensor's nominal mode, not yet read off
 LineageOS's camera app on the 2026-09-05 build (JonGilmore); the "No imgsensor alive" lines in the
 kernel log appear on that working unit too, so they are not a fault by themselves. The lens
 cover reads on `gpio-499`: high with the shutter open, low with it closed. A first picture with
-TECHO5 will tell whether the geometry and colour order are right.
+TECHO5 will tell whether the geometry and color order are right.
 
 ## Known catch: Wi-Fi security
 
@@ -153,7 +153,7 @@ Use WPA2-Personal with PMF off or "optional". This applies to every TECHO5 devic
   clears it, and the red light follows it. But the button does not set it (see Mute switch).
 - ~~Does the latch cut the microphones in hardware?~~ Yes, and it takes their power with it: capture
   reads zeros until the kernel patch above puts the pin back.
-- ~~Does the camera come up at 1280×720 with the same colour order?~~ 1280×720 yes; the order is the
+- ~~Does the camera come up at 1280×720 with the same color order?~~ 1280×720 yes; the order is the
   other way round (its Bayer cells start with blue, cronos starts with red), so TECHO5 swaps red and
   blue on this board. A unit reports the picture upright, the colors right and the exposure sensible
   (JonGilmore, 2026-09-19).
