@@ -1,0 +1,6 @@
+# What the kit pushes to the unit must stay LF whatever the checkout platform does: a Windows clone
+# otherwise hands out hwdump.sh with CRLF line ends, the unit's shell reads every line with a stray
+# carriage return, and the hardware dump comes back as error noise. The rest follows the platform.
+* text=auto
+*.sh text eol=lf
+*.py text eol=lf

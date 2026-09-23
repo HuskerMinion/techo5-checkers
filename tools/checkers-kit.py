@@ -345,7 +345,7 @@ def cmd_test(args):
     time.sleep(1)
     cam_log = adb.shell("dmesg 2>/dev/null | grep -iE 'ov9734|imgsensor|sensor_id|kd_sensorlist|seninf' | tail -40")
     adb.shell("input keyevent KEYCODE_HOME")
-    note("camera", "live picture: %s\ncolours right: %s\nkernel log while the camera opened:\n%s"
+    note("camera", "live picture: %s\ncolors right: %s\nkernel log while the camera opened:\n%s"
          % ("yes" if picture else "no", "yes" if colors else ("n/a" if not picture else "no"), cam_log))
 
     text = redact("\n".join(report) + "\n", info["serials"])
