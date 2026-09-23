@@ -162,20 +162,32 @@ def cmd_check(args):
 # ---- backup ------------------------------------------------------------------------------------
 
 def partitions(adb):
-    """Every named partition, plus the two boot areas that hold the first-stage bootloader."""
-    listing = adb.shell("ls /dev/block/platform/*/by-name 2>/dev/null || ls /dev/block/by-name")
+    """Every named partition, the two boot areas that hold the first-stage bootloader, and the partition
+    table at each end of the chip. Each is (name, device, first sector, sectors), the last two None for
+    the whole device."""
+    # One directory of by-name links, and the names read from that same one: a kernel can register
+    # more than one platform directory with them, and listing them all names every partition twice.
+    base = "/dev/block/by-name"
+    if not adb.shell("ls %s 2>/dev/null" % base):
+        found = adb.shell("ls -d /dev/block/platform/*/by-name 2>/dev/null").split()
+        if not found:
+            fail("the Show lists no named partitions (no /dev/block/by-name). Ask on the issue.")
+        base = found[0]
     # The list also names the whole chip (mmcblk0), its secure area (mmcblk0rpmb, which a plain read
     # can hang on) and the two boot areas; the whole chip would copy everything twice, and the boot
     # areas are added once below.
-    names = sorted(n for n in listing.split()
-                   if re.fullmatch(r"[A-Za-z0-9_.-]+", n) and not n.startswith("mmcblk"))
-    parts = [(n, "/dev/block/by-name/" + n) for n in names]
-    if not adb.shell("ls /dev/block/by-name 2>/dev/null"):
-        base = adb.shell("ls -d /dev/block/platform/*/by-name").split()[0]
-        parts = [(n, base + "/" + n) for n in names]
+    names = sorted(set(n for n in adb.shell("ls " + base).split()
+                       if re.fullmatch(r"[A-Za-z0-9_.-]+", n) and not n.startswith("mmcblk")))
+    parts = [(n, base + "/" + n, None, None) for n in names]
     for extra in ("mmcblk0boot0", "mmcblk0boot1"):
         if adb.shell("ls /dev/block/" + extra + " 2>/dev/null"):
-            parts.append((extra, "/dev/block/" + extra))
+            parts.append((extra, "/dev/block/" + extra, None, None))
+    # The partition table is in no partition: the protective MBR and the GPT in the chip's first 34
+    # sectors, and its copy in the last 33. Without them the partitions above cannot be laid back out.
+    chip = size_of(adb, "/dev/block/mmcblk0") // 512
+    if chip > 67:
+        parts.append(("gpt-primary", "/dev/block/mmcblk0", 0, 34))
+        parts.append(("gpt-backup", "/dev/block/mmcblk0", chip - 33, 33))
     return parts
 
 
@@ -184,11 +196,20 @@ def size_of(adb, dev):
     return int(s) if s.isdigit() else 0
 
 
+def read_command(dev, first, count):
+    """The command on the Show that writes this part's bytes to standard output."""
+    if count is None:
+        return "dd if=%s bs=1048576 2>/dev/null" % dev
+    return "dd if=%s bs=512 skip=%d count=%d 2>/dev/null" % (dev, first, count)
+
+
 def human(n):
     if n >= 1e9:
         return "%.1f GB" % (n / 1e9)
     if n >= 1e7:
         return "%d MB" % (n / 1e6)
+    if n < 1e5:
+        return "%.1f KB" % (n / 1e3)
     return "%.1f MB" % (n / 1e6)
 
 
@@ -198,8 +219,8 @@ def cmd_backup(args):
     if info["device"] != "checkers":
         fail("this doesn't say it's a checkers (1st-gen Echo Show 5).")
 
-    parts = [(n, d) for n, d in partitions(adb) if args.with_userdata or n not in SKIP_BY_DEFAULT]
-    sizes = {n: size_of(adb, d) for n, d in parts}
+    parts = [p for p in partitions(adb) if args.with_userdata or p[0] not in SKIP_BY_DEFAULT]
+    sizes = {n: size_of(adb, d) if count is None else count * 512 for n, d, _, count in parts}
     total = sum(sizes.values())
     stamp = datetime.datetime.now().strftime("%Y%m%d-%H%M")
     out = os.path.abspath(args.out or "checkers-backup-" + stamp)
@@ -216,15 +237,15 @@ def cmd_backup(args):
     say()
 
     sums = []
-    for i, (name, dev) in enumerate(parts, 1):
+    for i, (name, dev, first, count) in enumerate(parts, 1):
         want = sizes[name]
         say("[%d/%d] %s (%s)..." % (i, len(parts), name, human(want)))
         path = os.path.join(out, name + ".img")
         h = hashlib.sha256()
         got = 0
+        read = read_command(dev, first, count)
         with open(path, "wb") as f:
-            p = subprocess.Popen([adb.path, "exec-out", "dd if=%s bs=1048576 2>/dev/null" % dev],
-                                 stdout=subprocess.PIPE)
+            p = subprocess.Popen([adb.path, "exec-out", read], stdout=subprocess.PIPE)
             while True:
                 chunk = p.stdout.read(1 << 20)
                 if not chunk:
@@ -237,7 +258,7 @@ def cmd_backup(args):
             fail("%s came across short (%d of %d bytes). Check the cable and run backup again."
                  % (name, got, want))
         mine = h.hexdigest()
-        theirs = adb.shell("sha256sum " + dev, timeout=900).split()
+        theirs = adb.shell(("sha256sum " + dev) if count is None else (read + " | sha256sum"), timeout=900).split()
         if not theirs or theirs[0] != mine:
             fail("%s doesn't match the Show's own checksum. Check the cable and run backup again." % name)
         sums.append("%s  %s.img" % (mine, name))
