@@ -2,6 +2,10 @@
   <img src="https://raw.githubusercontent.com/HuskerMinion/techo5/main/logo/TECHO5_logo.png" alt="TECHO5" width="200">
 </p>
 
+<p align="center">
+  <img src="images/checkers.png" alt="CHECKERS" width="140">
+</p>
+
 <h1 align="center">TECHO5 Checkers</h1>
 
 <h3 align="center">The hardware notes behind TECHO5 on the Echo Show 5, 1st generation (2019, codename <code>checkers</code>)</h3>
@@ -67,6 +71,12 @@ latch, the camera and the spoken replies were all found or confirmed from what h
 bootloader unlock is [R0rt1z2](https://github.com/R0rt1z2)'s amonet, branch `mt8163-checkers`, with the
 [XDA thread](https://xdaforums.com/t/unlock-root-twrp-unbrick-amazon-echo-show-5-1st-gen-2019-checkers.4762900/)
 for it, and LineageOS 18.1 for `checkers` is theirs too.
+
+## Image credits
+
+The CHECKERS badge: international draughts by Michel32Nl,
+[Wikimedia Commons](https://commons.wikimedia.org/wiki/File:International_draughts.jpg),
+[CC BY-SA 3.0](https://creativecommons.org/licenses/by-sa/3.0/); the cropped badge is CC BY-SA 3.0 too.
 
 ## License
 
